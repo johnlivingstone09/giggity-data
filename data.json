@@ -24,19 +24,6 @@
       "description": "",
       "payMethod": "UPI / GPay",
       "notes": ""
-    },
-    {
-      "id": 1,
-      "type": "txn-revenue",
-      "payments": [],
-      "entity": "personal",
-      "date": "2026-03-22",
-      "amount": 235334453355323520,
-      "taxAmount": 0,
-      "category": "",
-      "description": "",
-      "payMethod": "UPI",
-      "reference": ""
     }
   ],
   "profile": {
@@ -48,5 +35,5 @@
     "monthlyBudget": 0
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-22T17:28:43.851Z"
+  "_lastSaved": "2026-03-22T17:29:05.148Z"
 }
