@@ -1,6 +1,44 @@
 {
   "companies": [],
-  "entries": [],
+  "entries": [
+    {
+      "id": 1,
+      "type": "expense",
+      "payments": [],
+      "entity": "personal",
+      "date": "2026-03-22",
+      "amount": 1000,
+      "category": "Food & Dining",
+      "description": "",
+      "payMethod": "UPI / GPay",
+      "notes": ""
+    },
+    {
+      "id": 2,
+      "type": "expense",
+      "payments": [],
+      "entity": "personal",
+      "date": "2026-03-22",
+      "amount": 2000,
+      "category": "Food & Dining",
+      "description": "",
+      "payMethod": "UPI / GPay",
+      "notes": ""
+    },
+    {
+      "id": 1,
+      "type": "txn-revenue",
+      "payments": [],
+      "entity": "personal",
+      "date": "2026-03-22",
+      "amount": 235334453355323520,
+      "taxAmount": 0,
+      "category": "",
+      "description": "",
+      "payMethod": "UPI",
+      "reference": ""
+    }
+  ],
   "profile": {
     "name": "",
     "joined": "2026-03-22"
@@ -10,5 +48,5 @@
     "monthlyBudget": 0
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-22T18:02:12.271Z"
+  "_lastSaved": "2026-03-22T17:59:02.905Z"
 }
