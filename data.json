@@ -24,18 +24,6 @@
       "description": "",
       "payMethod": "UPI / GPay",
       "notes": ""
-    },
-    {
-      "id": 3,
-      "type": "expense",
-      "payments": [],
-      "entity": "personal",
-      "date": "2026-03-23",
-      "amount": 1000000,
-      "category": "Food & Dining",
-      "description": "",
-      "payMethod": "UPI / GPay",
-      "notes": ""
     }
   ],
   "profile": {
@@ -47,5 +35,5 @@
     "monthlyBudget": 0
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-23T06:51:19.726Z"
+  "_lastSaved": "2026-03-23T06:54:50.270Z"
 }
