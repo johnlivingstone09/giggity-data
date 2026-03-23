@@ -36,31 +36,6 @@
       "description": "",
       "payMethod": "UPI / GPay",
       "notes": ""
-    },
-    {
-      "id": 4,
-      "type": "expense",
-      "payments": [],
-      "entity": "personal",
-      "date": "2026-03-23",
-      "amount": 1546132,
-      "category": "Food & Dining",
-      "description": "",
-      "payMethod": "UPI / GPay",
-      "notes": ""
-    },
-    {
-      "id": 1,
-      "type": "txn-revenue",
-      "payments": [],
-      "entity": "personal",
-      "date": "2026-03-23",
-      "amount": 546416169491,
-      "taxAmount": 0,
-      "category": "",
-      "description": "",
-      "payMethod": "UPI",
-      "reference": ""
     }
   ],
   "profile": {
@@ -73,6 +48,6 @@
     "budgetCategories": {}
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-23T07:20:05.271Z",
+  "_lastSaved": "2026-03-23T07:16:45.471Z",
   "_device": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb"
 }
