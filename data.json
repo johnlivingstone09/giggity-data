@@ -28,7 +28,15 @@
     {
       "id": 1,
       "type": "chit",
-      "payments": [],
+      "payments": [
+        {
+          "amount": 1000,
+          "date": "2026-03-23",
+          "method": "UPI / GPay",
+          "note": "Month 1 EMI",
+          "time": "12:27"
+        }
+      ],
       "entity": "personal",
       "name": "sfdg",
       "organizer": "sgff",
@@ -39,7 +47,8 @@
       "chitDate": 1,
       "auctionMonth": 5,
       "date": "2026-01-01",
-      "status": "Active"
+      "status": "Active",
+      "currentMonth": 1
     }
   ],
   "profile": {
@@ -51,5 +60,5 @@
     "monthlyBudget": 0
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-23T06:57:48.880Z"
+  "_lastSaved": "2026-03-23T06:57:53.529Z"
 }
