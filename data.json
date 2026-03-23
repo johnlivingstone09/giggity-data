@@ -62,6 +62,18 @@
       "description": "",
       "payMethod": "UPI",
       "reference": ""
+    },
+    {
+      "id": 4,
+      "type": "expense",
+      "payments": [],
+      "entity": "personal",
+      "date": "2026-03-23",
+      "amount": 14,
+      "category": "Food & Dining",
+      "description": "",
+      "payMethod": "UPI / GPay",
+      "notes": ""
     }
   ],
   "profile": {
@@ -74,6 +86,6 @@
     "budgetCategories": {}
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-23T07:22:45.769Z",
+  "_lastSaved": "2026-03-23T07:23:13.064Z",
   "_device": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb"
 }
