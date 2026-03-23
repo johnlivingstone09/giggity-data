@@ -42,6 +42,13 @@
           "method": "UPI / GPay",
           "note": "Month 2 EMI",
           "time": "12:27"
+        },
+        {
+          "amount": 1000,
+          "date": "2026-03-23",
+          "method": "UPI / GPay",
+          "note": "Month 3 EMI",
+          "time": "12:28"
         }
       ],
       "entity": "personal",
@@ -55,7 +62,7 @@
       "auctionMonth": 5,
       "date": "2026-01-01",
       "status": "Active",
-      "currentMonth": 2
+      "currentMonth": 3
     }
   ],
   "profile": {
@@ -67,5 +74,5 @@
     "monthlyBudget": 0
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-23T06:57:57.240Z"
+  "_lastSaved": "2026-03-23T06:58:03.128Z"
 }
