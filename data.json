@@ -24,6 +24,22 @@
       "description": "",
       "payMethod": "UPI / GPay",
       "notes": ""
+    },
+    {
+      "id": 1,
+      "type": "chit",
+      "payments": [],
+      "entity": "personal",
+      "name": "sfdg",
+      "organizer": "sgff",
+      "chitValue": 100000,
+      "monthlyInstallment": 1000,
+      "totalMembers": 10,
+      "durationMonths": 10,
+      "chitDate": 1,
+      "auctionMonth": 5,
+      "date": "2026-01-01",
+      "status": "Active"
     }
   ],
   "profile": {
@@ -35,5 +51,5 @@
     "monthlyBudget": 0
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-23T06:57:44.753Z"
+  "_lastSaved": "2026-03-23T06:57:48.880Z"
 }
