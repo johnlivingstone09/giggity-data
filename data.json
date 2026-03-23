@@ -61,12 +61,22 @@
     {
       "id": 1,
       "type": "debt",
-      "payments": [],
+      "payments": [
+        {
+          "amount": 3000,
+          "date": "2026-03-23",
+          "type": "Monthly EMI",
+          "method": "UPI / GPay",
+          "note": "3 months EMI — Mar 2026",
+          "principalOnly": false,
+          "emiChanged": false
+        }
+      ],
       "entity": "personal",
       "name": "sgfsg",
       "lender": "sdfgsdf",
       "totalAmount": 100000,
-      "amountPaid": 0,
+      "amountPaid": 3000,
       "emi": 1000,
       "emiDate": 2,
       "emiStartMonth": "2026-1",
@@ -86,5 +96,5 @@
     "monthlyBudget": 0
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-23T06:58:49.009Z"
+  "_lastSaved": "2026-03-23T06:58:56.929Z"
 }
