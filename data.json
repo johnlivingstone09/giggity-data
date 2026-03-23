@@ -1,1 +1,53 @@
-{"companies":[],"entries":[{"id":1,"type":"expense","payments":[],"entity":"personal","date":"2026-03-22","amount":1000,"category":"Food & Dining","description":"","payMethod":"UPI / GPay","notes":""},{"id":2,"type":"expense","payments":[],"entity":"personal","date":"2026-03-22","amount":2000,"category":"Food & Dining","description":"","payMethod":"UPI / GPay","notes":""},{"id":3,"type":"expense","payments":[],"entity":"personal","date":"2026-03-23","amount":100000,"category":"Food & Dining","description":"","payMethod":"UPI / GPay","notes":""},{"id":4,"type":"expense","payments":[],"entity":"personal","date":"2026-03-23","amount":1546132,"category":"Food & Dining","description":"","payMethod":"UPI / GPay","notes":""},{"id":1,"type":"txn-revenue","payments":[],"entity":"personal","date":"2026-03-23","amount":546416169491,"taxAmount":0,"category":"","description":"","payMethod":"UPI","reference":""}],"profile":{"name":"","joined":"2026-03-22"},"settings":{"theme":"light","monthlyBudget":0,"budgetCategories":{}},"_version":"22.5","_lastSaved":"2026-03-23T07:22:10.512Z","_device":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb"}
+{
+  "companies": [],
+  "entries": [
+    {
+      "id": 1,
+      "type": "expense",
+      "payments": [],
+      "entity": "personal",
+      "date": "2026-03-22",
+      "amount": 1000,
+      "category": "Food & Dining",
+      "description": "",
+      "payMethod": "UPI / GPay",
+      "notes": ""
+    },
+    {
+      "id": 2,
+      "type": "expense",
+      "payments": [],
+      "entity": "personal",
+      "date": "2026-03-22",
+      "amount": 2000,
+      "category": "Food & Dining",
+      "description": "",
+      "payMethod": "UPI / GPay",
+      "notes": ""
+    },
+    {
+      "id": 3,
+      "type": "expense",
+      "payments": [],
+      "entity": "personal",
+      "date": "2026-03-23",
+      "amount": 100000,
+      "category": "Food & Dining",
+      "description": "",
+      "payMethod": "UPI / GPay",
+      "notes": ""
+    }
+  ],
+  "profile": {
+    "name": "",
+    "joined": "2026-03-22"
+  },
+  "settings": {
+    "theme": "light",
+    "monthlyBudget": 0,
+    "budgetCategories": {}
+  },
+  "_version": "22.5",
+  "_lastSaved": "2026-03-23T07:18:45.460Z",
+  "_device": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb"
+}
