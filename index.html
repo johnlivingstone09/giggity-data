@@ -373,11 +373,14 @@ function getDeviceLink(){
   return window.location.origin+window.location.pathname+'#'+data;
 }
 
+// ═══ GITHUB SYNC — Smart merge, auto-pull, conflict resolution ═══
+
 async function ghLoad(){
   if(!GH.token||!GH.owner||!GH.repo)return null;
   try{
     const res=await fetch('https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/contents/data.json',{
-      headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github.v3+json'}});
+      headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github.v3+json'},
+      cache:'no-store'});
     if(res.status===404)return null;
     if(!res.ok)throw new Error('API '+res.status);
     const json=await res.json();GH.sha=json.sha;
@@ -385,25 +388,127 @@ async function ghLoad(){
   }catch(e){console.error('GH load:',e);return null}
 }
 
-async function ghSave(){
-  if(!GH.token||!GH.owner||!GH.repo||GH.syncing)return false;
+async function ghSave(force){
+  if(!GH.token||!GH.owner||!GH.repo)return false;
+  if(GH.syncing&&!force)return false;
   GH.syncing=true;updateSyncStatus('syncing');
   try{
-    try{const chk=await fetch('https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/contents/data.json',{
-      headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github.v3+json'}});
-      if(chk.ok){GH.sha=(await chk.json()).sha}}catch(e){}
-    const content=btoa(unescape(encodeURIComponent(JSON.stringify(D,null,2))));
+    // Always get latest SHA before saving
+    try{
+      const chk=await fetch('https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/contents/data.json',{
+        headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github.v3+json'},
+        cache:'no-store'});
+      if(chk.ok){
+        const chkJson=await chk.json();
+        GH.sha=chkJson.sha;
+        // Check if remote has newer data — merge if needed
+        const remoteData=JSON.parse(atob(chkJson.content.replace(/\n/g,'')));
+        if(remoteData._lastSaved&&D._lastSaved&&remoteData._lastSaved>D._lastSaved&&!force){
+          // Remote is newer! Merge instead of overwrite
+          const merged=mergeData(D,remoteData);
+          D=merged;D._version=APP_VERSION;D._lastSaved=new Date().toISOString();
+          rebuildUIDs();
+          localStorage.setItem(LS,JSON.stringify(D));
+          render();
+        }
+      }
+    }catch(e){}
+    
+    D._lastSaved=new Date().toISOString();
+    D._device=navigator.userAgent.substring(0,50);
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(D))));
     const body={message:'sync '+new Date().toISOString(),content};
     if(GH.sha)body.sha=GH.sha;
     const res=await fetch('https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/contents/data.json',{
-      method:'PUT',headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
       body:JSON.stringify(body)});
     const resJson=await res.json();
     if(!res.ok)throw new Error(resJson.message||res.status);
-    GH.sha=resJson.content.sha;GH.lastSync=new Date().toISOString();GH.connected=true;
-    updateSyncStatus('synced');return true;
-  }catch(e){console.error('GH save:',e);updateSyncStatus('error');return false}
-  finally{GH.syncing=false}
+    GH.sha=resJson.content.sha;
+    GH.lastSync=new Date().toISOString();
+    GH.connected=true;
+    updateSyncStatus('synced');
+    return true;
+  }catch(e){
+    console.error('GH save:',e);
+    updateSyncStatus('error');
+    return false;
+  }finally{GH.syncing=false}
+}
+
+// Smart merge: combines entries from both sources, deduplicates by id+type
+function mergeData(local,remote){
+  const merged=JSON.parse(JSON.stringify(remote)); // Start with remote as base
+  
+  // Merge entries — keep all unique entries from both
+  const remoteEntryKeys=new Set((remote.entries||[]).map(e=>e.type+'-'+e.id));
+  const localEntryKeys=new Set((local.entries||[]).map(e=>e.type+'-'+e.id));
+  
+  // Add local entries that don't exist in remote
+  (local.entries||[]).forEach(e=>{
+    const key=e.type+'-'+e.id;
+    if(!remoteEntryKeys.has(key)){
+      merged.entries.push(e);
+    } else {
+      // Both have this entry — keep the one with more data (more payments, later date)
+      const ri=merged.entries.findIndex(r=>r.type===e.type&&r.id===e.id);
+      if(ri>=0){
+        const re=merged.entries[ri];
+        // For debt/chit — keep the one with more payments
+        if((e.payments||[]).length>(re.payments||[]).length){
+          merged.entries[ri]=e;
+        }
+        // For other types — keep the one with later _lastSaved or date
+        else if(!e.payments&&(e.date||'')>(re.date||'')){
+          merged.entries[ri]=e;
+        }
+      }
+    }
+  });
+  
+  // Merge companies — keep all unique
+  const remoteCompIds=new Set((remote.companies||[]).map(c=>c.id));
+  (local.companies||[]).forEach(c=>{
+    if(!remoteCompIds.has(c.id))merged.companies.push(c);
+  });
+  
+  // Keep the settings with more budget categories
+  if(local.settings&&local.settings.budgetCategories){
+    if(!merged.settings)merged.settings={};
+    if(!merged.settings.budgetCategories)merged.settings.budgetCategories={};
+    Object.assign(merged.settings.budgetCategories,local.settings.budgetCategories);
+  }
+  
+  return merged;
+}
+
+// Auto-pull: fetch from GitHub and merge with local
+async function autoPull(){
+  if(!GH.token||!GH.owner||!GH.repo||GH.syncing)return;
+  try{
+    const remote=await ghLoad();
+    if(!remote||!remote.entries)return;
+    
+    // If remote is newer than local, merge
+    if(remote._lastSaved&&D._lastSaved){
+      if(remote._lastSaved>D._lastSaved){
+        const merged=mergeData(D,remote);
+        D=merged;D._version=APP_VERSION;
+        rebuildUIDs();
+        localStorage.setItem(LS,JSON.stringify(D));
+        render();
+        updateSyncStatus('synced');
+      }
+    } else if(remote.entries.length>D.entries.length){
+      // No timestamps — use entry count as heuristic
+      D=remote;D._version=APP_VERSION;
+      rebuildUIDs();
+      localStorage.setItem(LS,JSON.stringify(D));
+      render();
+      updateSyncStatus('synced');
+    }
+  }catch(e){console.error('Auto-pull:',e)}
 }
 
 function updateSyncStatus(state){
@@ -411,57 +516,118 @@ function updateSyncStatus(state){
   const t=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
   if(state==='syncing')el.innerHTML='<span style="color:var(--amber)">\u21bb Syncing...</span>';
   else if(state==='synced')el.innerHTML='<span style="color:var(--green)">\u2601 Synced '+t+'</span>';
-  else if(state==='error')el.innerHTML='<span style="color:var(--red)">\u26a0 Sync failed</span>';
+  else if(state==='error')el.innerHTML='<span style="color:var(--red)">\u26a0 Sync failed — saved locally</span>';
   else el.textContent='\ud83d\udcbe Local '+t;
 }
 
 function rebuildUIDs(){
-  D.entries.forEach(e=>{const p=e.type.split('-')[0];if(e.id>uid[p])uid[p]=e.id;if(e.id>(uid[e.type]||0))uid[e.type]=e.id});
+  uid={debt:0,expense:0,income:0,saving:0,chit:0,invoice:0,inventory:0,employee:0,company:0};
+  D.entries.forEach(e=>{const p=e.type.split('-')[0];if(e.id>(uid[p]||0))uid[p]=e.id;if(e.id>(uid[e.type]||0))uid[e.type]=e.id});
   D.companies.forEach(c=>{if(c.id>uid.company)uid.company=c.id});
 }
 
+// ═══ LOAD — Always pull from GitHub on every page load ═══
 async function loadData(){
   loadGHConfig();
-  if(GH.token&&GH.owner&&GH.repo){
-    try{const ghData=await ghLoad();
-      if(ghData&&ghData.entries){D=ghData;D._version=APP_VERSION;rebuildUIDs();
-        localStorage.setItem(LS,JSON.stringify(D));GH.connected=true;updateSyncStatus('synced');render();
-        toast('\u2601 '+D.entries.length+' entries from GitHub');return}}catch(e){}
-  }
-  try{let raw=localStorage.getItem(LS);
+  
+  // Load local data first (instant, for fast UI)
+  try{
+    let raw=localStorage.getItem(LS);
     if(!raw)raw=localStorage.getItem('giggity_v22');
     if(!raw)raw=localStorage.getItem('finsheet_v6');
-    if(raw){const parsed=JSON.parse(raw);
-      if(parsed.debt&&!parsed.entries){migrateOldData(parsed);return}
-      D=parsed;D._version=APP_VERSION;rebuildUIDs();localStorage.setItem(LS,JSON.stringify(D))}
-  }catch(e){console.error('Load:',e)}
-  updateSyncStatus('local');
+    if(raw){
+      const parsed=JSON.parse(raw);
+      if(parsed.debt&&!parsed.entries){migrateOldData(parsed)}
+      else{D=parsed;D._version=APP_VERSION;rebuildUIDs()}
+    }
+  }catch(e){console.error('Local load:',e)}
+  
+  // Then pull from GitHub (always, on every load)
+  if(GH.token&&GH.owner&&GH.repo){
+    updateSyncStatus('syncing');
+    try{
+      const remote=await ghLoad();
+      if(remote&&remote.entries){
+        if(D.entries.length===0){
+          // Local is empty — use remote entirely
+          D=remote;D._version=APP_VERSION;rebuildUIDs();
+        } else {
+          // Both have data — smart merge (keeps all entries from both)
+          D=mergeData(D,remote);D._version=APP_VERSION;rebuildUIDs();
+        }
+        localStorage.setItem(LS,JSON.stringify(D));
+        GH.connected=true;
+        updateSyncStatus('synced');
+      } else {
+        // No remote data — push local to GitHub
+        if(D.entries.length>0)await ghSave(true);
+        GH.connected=true;
+        updateSyncStatus('synced');
+      }
+    }catch(e){
+      console.error('GitHub load failed:',e);
+      updateSyncStatus('error');
+    }
+  } else {
+    updateSyncStatus('local');
+  }
 }
 
+// ═══ SAVE — Local instant + GitHub push ═══
 let _saveTimer=null;
 function saveData(){
-  try{D._version=APP_VERSION;D._lastSaved=new Date().toISOString();
-    localStorage.setItem(LS,JSON.stringify(D));updateSyncStatus('local');
-    if(GH.token&&GH.owner&&GH.repo){clearTimeout(_saveTimer);_saveTimer=setTimeout(()=>ghSave(),3000)}
+  try{
+    D._version=APP_VERSION;
+    D._lastSaved=new Date().toISOString();
+    localStorage.setItem(LS,JSON.stringify(D));
+    
+    if(GH.token&&GH.owner&&GH.repo){
+      updateSyncStatus('local');
+      // Push to GitHub after 2 seconds of inactivity
+      clearTimeout(_saveTimer);
+      _saveTimer=setTimeout(()=>ghSave(),2000);
+    } else {
+      updateSyncStatus('local');
+    }
   }catch(e){toast('\u26a0 Save failed')}
 }
 
-function syncNow(){if(!GH.token){openGHSetup();return}ghSave().then(ok=>{if(ok)toast('\u2601 Synced!')})}
+// Force push to GitHub right now
+function syncNow(){
+  if(!GH.token){openGHSetup();return}
+  ghSave(true).then(ok=>{if(ok)toast('\u2601 Synced to GitHub!')});
+}
 
+// Pull latest from GitHub and merge
 async function pullFromGH(){
   if(!GH.token){openGHSetup();return}
   updateSyncStatus('syncing');
-  const data=await ghLoad();
-  if(data&&data.entries){
-    D=data;D._version=APP_VERSION;rebuildUIDs();
-    localStorage.setItem(LS,JSON.stringify(D));
-    GH.connected=true;updateSyncStatus('synced');render();
-    toast('\u2601 Pulled latest — '+D.entries.length+' entries');
-  } else {
-    updateSyncStatus('error');
-    toast('\u26a0 No data found on GitHub');
-  }
+  try{
+    const remote=await ghLoad();
+    if(remote&&remote.entries){
+      D=mergeData(D,remote);D._version=APP_VERSION;rebuildUIDs();
+      localStorage.setItem(LS,JSON.stringify(D));
+      GH.connected=true;updateSyncStatus('synced');render();
+      toast('\u2601 Synced — '+D.entries.length+' entries');
+    } else {
+      updateSyncStatus('error');
+      toast('\u26a0 No data on GitHub');
+    }
+  }catch(e){updateSyncStatus('error');toast('\u26a0 Sync failed: '+e.message)}
 }
+
+// Save before user leaves the page
+window.addEventListener('beforeunload',function(){
+  if(GH.token&&GH.owner&&GH.repo){
+    D._lastSaved=new Date().toISOString();
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(D))));
+    const body=JSON.stringify({message:'auto-save '+new Date().toISOString(),content,sha:GH.sha||undefined});
+    navigator.sendBeacon&&navigator.sendBeacon('https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/contents/data.json',
+      new Blob([body],{type:'application/json'}));
+  }
+  localStorage.setItem(LS,JSON.stringify(D));
+});
+
 function openGHSetup(){
   openFormModalRaw('\u2601 GitHub Cloud Sync','<div style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:14px">Store data in a <b>private GitHub repo</b>. Access from any device, any browser, any country.</div>'+
   '<div style="background:var(--accentBg);border:1px solid var(--accentBr);border-radius:var(--rsm);padding:12px;margin-bottom:14px">'+
@@ -2586,16 +2752,28 @@ function dlAllReports(){dlReport('all')}
 (async function(){
   await loadData();
   initTheme();render();
+  
+  // Auto-save every 30 seconds
   setInterval(saveData,30000);
+  
+  // Auto-pull from GitHub every 60 seconds (to catch changes from other devices)
+  setInterval(()=>{if(GH.connected)autoPull()},60000);
+  
+  // Pull when tab becomes visible (user switches back to this tab)
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden&&GH.connected){
+      setTimeout(()=>autoPull(),500);
+    }
+  });
+  
   setTimeout(()=>{
-    // Show sync status in topbar
     const ghIcon=document.getElementById('sync-btn');
     const pullBtn=document.getElementById('pull-btn');
     if(GH.connected){
       if(ghIcon)ghIcon.style.color='var(--green)';
       if(pullBtn)pullBtn.style.display='';
     }
-    toast(D.entries.length?(GH.connected?'\u2601':'\ud83d\udcbe')+' '+D.entries.length+' entries loaded':'\ud83d\udc4b Welcome to Giggity! Add your first entry.');
+    toast(D.entries.length?(GH.connected?'\u2601':'\ud83d\udcbe')+' '+D.entries.length+' entries loaded':'\ud83d\udc4b Welcome! Click \u2601 to setup cloud sync.');
   },500);
 })();
 
