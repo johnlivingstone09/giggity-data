@@ -57,6 +57,24 @@
       "status": "Active",
       "currentMonth": 2,
       "monthlyAmounts": []
+    },
+    {
+      "id": 1,
+      "type": "debt",
+      "payments": [],
+      "entity": "personal",
+      "name": "sgfsg",
+      "lender": "sdfgsdf",
+      "totalAmount": 100000,
+      "amountPaid": 0,
+      "emi": 1000,
+      "emiDate": 2,
+      "emiStartMonth": "2026-1",
+      "interestRate": 10.5,
+      "date": "2026-01-01",
+      "dueDate": "2027-02-01",
+      "status": "Active",
+      "notes": ""
     }
   ],
   "profile": {
@@ -68,5 +86,5 @@
     "monthlyBudget": 0
   },
   "_version": "22.5",
-  "_lastSaved": "2026-03-23T06:58:44.759Z"
+  "_lastSaved": "2026-03-23T06:58:49.009Z"
 }
